@@ -1,5 +1,6 @@
 #Use Python3
 
+pip install pyyaml
 
 python3 readmlm.py ab20.yml
 
