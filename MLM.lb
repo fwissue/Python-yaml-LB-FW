@@ -1,0 +1,336 @@
+#########################
+#
+# Version 1.0 Michael Liu
+#
+#########################
+
+ltm pool #pod#web-app_http {
+    load-balancing-mode least-connections-member
+    members {
+        #podappweb1#:http {
+            address #podappweb1#
+            session monitor-enabled
+            state up
+        }
+        #podappweb2#:http {
+            address #podappweb2#
+            session monitor-enabled
+            state up
+        }
+    }
+    monitor gateway_icmp and web_http 
+}
+ltm pool #pod#web-app_https {
+    load-balancing-mode least-connections-member
+    members {
+        #podappweb1#:https {
+            address #podappweb1#
+            session monitor-enabled
+            state up
+        }
+        #podappweb2#:https {
+            address #podappweb2#
+            session monitor-enabled
+            state up
+        }
+    }
+    monitor gateway_icmp and web_http 
+}
+ltm pool #pod#web-mch_http {
+    load-balancing-mode least-connections-member
+    members {
+        #podmchweb1#:http {
+            address #podmchweb1#
+            session monitor-enabled
+            state up
+        }
+        #podmchweb2#:http {
+            address #podmchweb2#
+            session monitor-enabled
+            state up
+        }
+    }
+    monitor gateway_icmp and mon-munchkin-http 
+}
+ltm pool #pod#web-mch_https {
+    load-balancing-mode least-connections-member
+    members {
+        #podmchweb1#:https {
+            address #podmchweb1#
+            session monitor-enabled
+            state up
+        }
+        #podmchweb2#:https {
+            address #podmchweb2#
+            session monitor-enabled
+            state up
+        }
+    }
+    monitor gateway_icmp and mon-munchkin-http 
+}
+
+ltm pool #pod#web-md_http {
+    load-balancing-mode least-connections-member
+    members {
+        #podmdweb1#:http {
+            address #podmdweb1#
+            session monitor-enabled
+            state up
+        }
+        #podmdweb2#:http {
+            address #podmdweb2#
+            session monitor-enabled
+            state up
+        }
+    }
+    monitor gateway_icmp and web_http 
+}
+
+ltm pool #pod#web-md_https {
+    load-balancing-mode least-connections-member
+    members {
+        #podmdweb1#:https {
+            address #podmdweb1#
+            session monitor-enabled
+            state up
+        }
+        #podmdweb2#:https {
+            address #podmdweb2#
+            session monitor-enabled
+            state up
+        }
+    }
+    monitor gateway_icmp and web_http 
+}
+
+ltm virtual #pod#web-app_80 {
+    destination #podapplb1#:http
+    ip-protocol tcp
+    mask 255.255.255.255
+    persist {
+        cookie_encrypt {
+            default yes
+        }
+    }
+    pool #pod#web-app_http
+    profiles {
+        TCP-30-MIN { }
+        http { }
+        oneconnect_akamai { }
+    }
+    rules {
+        Akamai_Throttle_Rule_v3
+    }
+    source 0.0.0.0/0
+    source-address-translation {
+        type automap
+    }
+    vlans {
+        external
+    }
+    vlans-enabled
+    vs-index 1288
+}
+ltm virtual #pod#web-app_443 {
+    destination #podapplb1#:https
+    ip-protocol tcp
+    mask 255.255.255.255
+    persist {
+        cookie_encrypt {
+            default yes
+        }
+    }
+    pool #pod#web-app_https
+    profiles {
+        TCP-30-MIN { }
+        http { }
+        oneconnect_akamai { }
+        wild_pfs.marketo.com {
+            context clientside
+        }
+    }
+    rules {
+        Akamai_Throttle_Rule_v3
+    }
+    source 0.0.0.0/0
+    source-address-translation {
+        type automap
+    }
+    vlans {
+        external
+    }
+    vlans-enabled
+    vs-index 1289
+}
+ltm virtual #pod#web-mch_80 {
+    destination #podmchlb1#:http
+    ip-protocol tcp
+    mask 255.255.255.255
+    persist {
+        cookie_encrypt {
+            default yes
+        }
+    }
+    pool #pod#web-mch_http
+    profiles {
+        TCP-30-MIN { }
+        http { }
+    }
+    rules {
+        X-Forwarded-For_v3
+    }
+    source 0.0.0.0/0
+    source-address-translation {
+        type automap
+    }
+    vlans {
+        external
+    }
+    vlans-enabled
+    vs-index 1290
+}
+ltm virtual #pod#web-mch_443 {
+    destination #podmchlb1#:https
+    ip-protocol tcp
+    mask 255.255.255.255
+    persist {
+        cookie_encrypt {
+            default yes
+        }
+    }
+    pool #pod#web-mch_https
+    profiles {
+        TCP-30-MIN { }
+        http { }
+        wild_pfs.mktoresp-sha2.com {
+            context clientside
+        }
+    }
+    rules {
+        X-Forwarded-For_v3
+    }
+    source 0.0.0.0/0
+    source-address-translation {
+        type automap
+    }
+    vlans {
+        external
+    }
+    vlans-enabled
+    vs-index 1291
+}
+ltm virtual #pod#web-md_80 {
+    destination #podmdlb1#:http
+    ip-protocol tcp
+    mask 255.255.255.255
+    persist {
+        cookie_encrypt {
+            default yes
+        }
+    }
+    pool #pod#web-md_http
+    profiles {
+        TCP-30-MIN { }
+        http { }
+    }
+    rules {
+        X-Forwarded-For_v3
+    }
+    source 0.0.0.0/0
+    source-address-translation {
+        type automap
+    }
+    vlans {
+        external
+    }
+    vlans-enabled
+    vs-index 1292
+}
+ltm virtual #pod#web-md_443 {
+    destination #podmdlb1#:https
+    ip-protocol tcp
+    mask 255.255.255.255
+    persist {
+        cookie_encrypt {
+            default yes
+        }
+    }
+    pool #pod#web-md_https
+    profiles {
+        TCP-30-MIN { }
+        http { }
+        wild_pfs.marketodesigner-sha2.com {
+            context clientside
+        }
+    }
+    rules {
+        X-Forwarded-For_v3
+    }
+    source 0.0.0.0/0
+    source-address-translation {
+        type automap
+    }
+    vlans {
+        external
+    }
+    vlans-enabled
+    vs-index 1293
+}
+ltm virtual #pod#web-mktoapi_80 {
+    destination #podmktoapilb1#:http
+    ip-protocol tcp
+    mask 255.255.255.255
+    persist {
+        cookie_encrypt {
+            default yes
+        }
+    }
+    pool #pod#web-app_http
+    profiles {
+        TCP-30-MIN { }
+        http { }
+    }
+    rules {
+        X-Forwarded-For_v3
+    }
+    source 0.0.0.0/0
+    source-address-translation {
+        type automap
+    }
+    vlans {
+        external
+    }
+    vlans-enabled
+    vs-index 1294
+}
+ltm virtual #pod#web-mktoapi_443 {
+    destination #podmktoapilb1#:https
+    ip-protocol tcp
+    mask 255.255.255.255
+    persist {
+        cookie_encrypt {
+            default yes
+        }
+    }
+    pool #pod#web-app_https
+    profiles {
+        TCP-30-MIN { }
+        http { }
+        wild_pfs.mktoapi-sha2.com {
+            context clientside
+        }
+    }
+    rules {
+        X-Forwarded-For_v3
+    }
+    source 0.0.0.0/0
+    source-address-translation {
+        type automap
+    }
+    vlans {
+        external
+    }
+    vlans-enabled
+    vs-index 1295
+}
+

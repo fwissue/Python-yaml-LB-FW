@@ -1,0 +1,24 @@
+#############################
+# 
+# Version 1.0 Michael Liu
+#
+##############################
+
+object network #pod#web-app_#podapplb1#
+host #podapplb1#
+nat (F5_EXTERNAL,EXT-ASR) static #podapppublicip1#
+object network #pod#web-mch_#podmchlb1#
+host #podmchlb1#
+nat (F5_EXTERNAL,EXT-ASR) static #podmunchkinpublicip1#
+object network #pod#web-md_#podmdlb1#
+host #podmdlb1#
+nat (F5_EXTERNAL,EXT-ASR) static #podmdpublicip1#
+object network #pod#web-mktoapi_#podmktoapilb1#
+host #podmktoapilb1#
+nat (F5_EXTERNAL,EXT-ASR) static #podmktoapipublicip1#
+
+access-list INCOMING extended permit tcp any object #pod#web-app_#podapplb1# object-group HTTP-HTTPS 
+access-list INCOMING extended permit tcp any object #pod#web-mch_#podmchlb1# object-group HTTP-HTTPS 
+access-list INCOMING extended permit tcp any object #pod#web-md_#podmdlb1# object-group HTTP-HTTPS 
+access-list INCOMING extended permit tcp any object #pod#web-mktoapi_#podmktoapilb1# object-group HTTP-HTTPS 
+
